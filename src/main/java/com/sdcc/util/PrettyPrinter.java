@@ -33,6 +33,18 @@ public class PrettyPrinter {
 
     }
 
+    public static String printTestResult(Node node, ApplicationResponse response, long nodeSelection, long execApp) {
+        String state = "fail";
+        if (response.getSystemError() == null)
+            state = "success";
+
+        return  "--------------------------------------\n" +
+                "Node: " + node.getIp() + "\n" +
+                "Execution: " + state + "\n" +
+                "Node selection time: " + nodeSelection + "ms\n" +
+                "App execution time: " + execApp + "ms\n";
+    }
+
     public static String[] printResulList(HashMap<String, String> results) {
 
         if (results.size() == 0) {
@@ -63,6 +75,7 @@ public class PrettyPrinter {
 
         return res;
     }
+
 
 
 }
