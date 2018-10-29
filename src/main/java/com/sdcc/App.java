@@ -5,8 +5,10 @@ import com.sdcc.entity.Monitor;
 import com.sdcc.entity.Node;
 import com.sdcc.enumeration.TaskExecutionMethodEnumeration;
 import com.sdcc.util.*;
+import org.json.JSONException;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,20 +27,20 @@ public class App {
             args[0] = appName
             args[1] = 1) remote: the system select the node with the default policy
                       2) cloud: the computation is forced on the cloud node
+                      3) local: the computation is forced on the local machine
             args[2] = RANDOM, GEO_POSITION
             args[3] = number of tests and threads to launch
             args[4] = "-args:param1,param2,param3,...
             */
 
-            int numberOfTests = 0;
+            int numberOfTests;
             String policy = args[2];
-            if (args[1].equals("cloud")) {
+            if (args[1].equals("cloud") || args[1].equals("local")) {
                 numberOfTests = Integer.parseInt(args[2]);
                 policy = "no policy";
-            }
-            else
+            } else
                 numberOfTests = Integer.parseInt(args[3]);
-            final String filename = "ok.txt";
+            final String filename = "FOR_1000req_locale.txt";
             final TestTimeUtils t = new TestTimeUtils();
             final CountDownLatch executionCompleted = new CountDownLatch(numberOfTests);
 
@@ -47,19 +49,96 @@ public class App {
             Date date = new Date();
 
             //String to append at the beginning of the file
-            String init =   "\n\n============TEST MODE===========\n" +
-                            "date time: " + dateFormat.format(date) + "\n" +
-                            "type of test: " + args[1] + "\n" +
-                            "policy: " + policy + "\n" +
-                            "number of requests: " + numberOfTests + "\n" +
-                            "application name: " + args[0] + "\n";
+            String init = "\n\n============TEST MODE===========\n" +
+                    "date time: " + dateFormat.format(date) + "\n" +
+                    "type of test: " + args[1] + "\n" +
+                    "policy: " + policy + "\n" +
+                    "number of requests: " + numberOfTests + "\n" +
+                    "application name: " + args[0] + "\n\n";
 
             System.out.println(init);
             FileOp.appendContents(filename, init);
 
             for (int i = 0; i < numberOfTests; i++) {
 
+                Node selectedNode = null;
+                ApplicationResponse response = null;
+                Config config = new Config();
+                String nodeType = "";
+                String execPath = "";
 
+                long requestNode_init = 0;
+                long requestNode_end = 0;
+                long execApp_init = 0;
+                long execApp_end = 0;
+
+
+                //the requested node type
+                if (args[1].equals("remote"))
+                    nodeType = "/node/find/" + args[2];
+                else if (args[1].equals("cloud"))
+                    nodeType = "/node/cloud";
+                else {
+                    //local computation
+                    String[] params = (args[3].split("-args:"));
+                    String[] launchParameters = new String[]{"java", "-jar", args[0]};
+
+
+                    try {
+                        execApp_init = System.currentTimeMillis();
+                        response = LocalExecution.exec(args[0], params[1]);
+                        execApp_end = System.currentTimeMillis();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+                    FileOp.appendContents(filename, Long.toString(execApp_end - execApp_init) + "\n");
+
+
+                }
+
+                if (!args[1].equals("local")) {
+                    try {
+                        requestNode_init = System.currentTimeMillis();
+                        selectedNode = GetJsonObject.getNodeFromUrl(config.getProperty("Middleware_node_ip") + ":" +
+                                config.getProperty("Middleware_application_port") + nodeType);
+                        requestNode_end = System.currentTimeMillis();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    //Build the link for the execution
+                    execPath = "http://" + selectedNode.getIp() + ":" + config.getProperty("Node_listening_port") +
+                            "/run/WAIT_FOR_RESULT/" + args[0];
+
+                    if (args.length > 4) { //there are arguments to pass at the application!
+                        String params = args[4].split("-args:")[1];
+                        execPath = execPath.concat("/" + params);
+                    }
+
+                    try {
+                        execApp_init = System.currentTimeMillis();
+                        response = GetJsonObject.getAppResponseFromUrl(execPath);
+                        execApp_end = System.currentTimeMillis();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    //FileOp.appendContents(filename,
+                    //        PrettyPrinter.printTestResult(selectedNode, response,
+                    //                requestNode_end-requestNode_init, execApp_end-execApp_init));
+                    FileOp.appendContents(filename, Long.toString(requestNode_end - requestNode_init + execApp_end - execApp_init) + "\n");
+                    FileOp.appendContents(filename + "_execapp.txt", Long.toString(execApp_end - execApp_init) + "\n");
+                    FileOp.appendContents(filename + "_selectnode.txt", Long.toString(requestNode_end - requestNode_init) + "\n");
+                    t.addExecTime(execApp_end - execApp_init);
+                    t.addSelectTime(requestNode_end - requestNode_init);
+                }
+
+                //FileOp.appendContents(filename, t.getTotalStats());
+
+
+                /*
 
                 Runnable runnable = new Runnable() {
                     @Override
@@ -108,9 +187,12 @@ public class App {
                             e.printStackTrace();
                         }
 
-                        FileOp.appendContents(filename,
-                                PrettyPrinter.printTestResult(selectedNode, response,
-                                        requestNode_end-requestNode_init, execApp_end-execApp_init));
+                        //FileOp.appendContents(filename,
+                        //        PrettyPrinter.printTestResult(selectedNode, response,
+                        //                requestNode_end-requestNode_init, execApp_end-execApp_init));
+                        FileOp.appendContents(filename,"NODO: " + selectedNode.getIp() + " -> " + Long.toString(requestNode_end-requestNode_init + execApp_end-execApp_init) + "\n");
+                        FileOp.appendContents(filename+"_execapp.txt", Long.toString(execApp_end-execApp_init) + "\n");
+                        FileOp.appendContents(filename+"_selectnode.txt", Long.toString(requestNode_end-requestNode_init) + "\n");
                         t.addExecTime(execApp_end - execApp_init);
                         t.addSelectTime(requestNode_end - requestNode_init);
                         executionCompleted.countDown();
@@ -119,6 +201,8 @@ public class App {
                 };
 
                 new Thread(runnable).start();
+
+
 
 
             }
@@ -131,6 +215,8 @@ public class App {
                 e.printStackTrace();
             }
 
+            */
+            }
         }
 
         else {
