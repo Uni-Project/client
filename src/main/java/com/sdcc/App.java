@@ -5,23 +5,22 @@ import com.sdcc.entity.Monitor;
 import com.sdcc.entity.Node;
 import com.sdcc.enumeration.TaskExecutionMethodEnumeration;
 import com.sdcc.util.*;
-import org.json.JSONException;
-
-import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
-import java.util.concurrent.CountDownLatch;
 
-
+//==================================================
+// WARNING!!!!!!
+// There is not too many control on the input data!
+// The usage is reserved for tests only!!
+//==================================================
 public class App {
 
     public static void main(final String[] args) {
 
-        // There is no control! The usage is reserved for tests only
+        //Automatic tests
         if (args.length > 0) {
             /*
             args[0] = appName
@@ -32,7 +31,6 @@ public class App {
             args[3] = number of tests and threads to launch
             args[4] = "-args:param1,param2,param3,...
             */
-
             int numberOfTests;
             String policy = args[2];
             if (args[1].equals("cloud") || args[1].equals("local")) {
@@ -40,9 +38,8 @@ public class App {
                 policy = "no policy";
             } else
                 numberOfTests = Integer.parseInt(args[3]);
-            final String filename = "FOR_1000req_locale.txt";
+            final String filename = "testxxshxjkxnjkx.txt";
             final TestTimeUtils t = new TestTimeUtils();
-            final CountDownLatch executionCompleted = new CountDownLatch(numberOfTests);
 
             //date time
             DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -91,13 +88,10 @@ public class App {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-
                     FileOp.appendContents(filename, Long.toString(execApp_end - execApp_init) + "\n");
-
-
                 }
 
+                //Remote application execution
                 if (!args[1].equals("local")) {
                     try {
                         requestNode_init = System.currentTimeMillis();
@@ -125,115 +119,32 @@ public class App {
                         e.printStackTrace();
                     }
 
-                    //FileOp.appendContents(filename,
-                    //        PrettyPrinter.printTestResult(selectedNode, response,
-                    //                requestNode_end-requestNode_init, execApp_end-execApp_init));
-                    FileOp.appendContents(filename, Long.toString(requestNode_end - requestNode_init + execApp_end - execApp_init) + "\n");
-                    FileOp.appendContents(filename + "_execapp.txt", Long.toString(execApp_end - execApp_init) + "\n");
-                    FileOp.appendContents(filename + "_selectnode.txt", Long.toString(requestNode_end - requestNode_init) + "\n");
-                    t.addExecTime(execApp_end - execApp_init);
-                    t.addSelectTime(requestNode_end - requestNode_init);
+                    FileOp.appendContents(filename,
+                            PrettyPrinter.printTestResult(selectedNode, response,
+                                    requestNode_end-requestNode_init, execApp_end-execApp_init));
+                    //FileOp.appendContents(filename, Long.toString(requestNode_end - requestNode_init + execApp_end - execApp_init) + "\n");
+                    //FileOp.appendContents(filename + "_execapp.txt", Long.toString(execApp_end - execApp_init) + "\n");
+                    //FileOp.appendContents(filename + "_selectnode.txt", Long.toString(requestNode_end - requestNode_init) + "\n");
+                    //t.addExecTime(execApp_end - execApp_init);
+                    //t.addSelectTime(requestNode_end - requestNode_init);
                 }
-
-                //FileOp.appendContents(filename, t.getTotalStats());
-
-
-                /*
-
-                Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        Node selectedNode = null;
-                        ApplicationResponse response = null;
-                        Config config = new Config();
-                        String nodeType;
-                        String execPath;
-
-                        long requestNode_init = 0;
-                        long requestNode_end = 0;
-                        long execApp_init = 0;
-                        long execApp_end = 0;
-
-
-                        //the requested node type
-                        if (args[1].equals("remote"))
-                            nodeType = "/node/find/" + args[2];
-                        else
-                            nodeType = "/node/cloud";
-
-                        try {
-                            requestNode_init = System.currentTimeMillis();
-                            selectedNode = GetJsonObject.getNodeFromUrl(config.getProperty("Middleware_node_ip") + ":" +
-                                    config.getProperty("Middleware_application_port") + nodeType);
-                            requestNode_end = System.currentTimeMillis();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        //Build the link for the execution
-                        execPath = "http://" + selectedNode.getIp() + ":" + config.getProperty("Node_listening_port") +
-                                "/run/WAIT_FOR_RESULT/" + args[0];
-
-                        if (args.length > 4) { //there are arguments to pass at the application!
-                            String params = args[4].split("-args:")[1];
-                            execPath = execPath.concat("/" + params);
-                        }
-
-                        try {
-                            execApp_init = System.currentTimeMillis();
-                            response = GetJsonObject.getAppResponseFromUrl(execPath);
-                            execApp_end = System.currentTimeMillis();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                        //FileOp.appendContents(filename,
-                        //        PrettyPrinter.printTestResult(selectedNode, response,
-                        //                requestNode_end-requestNode_init, execApp_end-execApp_init));
-                        FileOp.appendContents(filename,"NODO: " + selectedNode.getIp() + " -> " + Long.toString(requestNode_end-requestNode_init + execApp_end-execApp_init) + "\n");
-                        FileOp.appendContents(filename+"_execapp.txt", Long.toString(execApp_end-execApp_init) + "\n");
-                        FileOp.appendContents(filename+"_selectnode.txt", Long.toString(requestNode_end-requestNode_init) + "\n");
-                        t.addExecTime(execApp_end - execApp_init);
-                        t.addSelectTime(requestNode_end - requestNode_init);
-                        executionCompleted.countDown();
-
-                    }
-                };
-
-                new Thread(runnable).start();
-
-
-
-
-            }
-
-            try {
-                executionCompleted.await();
-                FileOp.appendContents(filename, t.getTotalStats());
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            */
             }
         }
 
+        //single test
         else {
-
             HashMap<String, String> results = new HashMap<String, String>();
             Config config = new Config();
-            Monitor monitor;
+            Monitor monitor = null;
 
             try {
                 monitor = GetJsonObject.getMonitorFromUrl(config.getProperty("Middleware_node_ip") + ":" + config.getProperty("Middleware_application_port") + config.getProperty("Middleware_test_status_path"));
-                System.out.println(monitor.getTotalCpuUsage());
             } catch (Exception ex) {
                 System.err.println("Cannot connect to the middleware server...");
                 Shutdown.suhtdown();
             }
-
-            System.out.println("System up and running! Type 'help' for the command list");
+            System.out.println("Middleware node up and running!\nMiddleware CPU Load: " + monitor.getTotalCpuUsage());
+            System.out.println("Type 'help' for the command list");
 
             Scanner scanner = new Scanner(System.in);
 
@@ -242,6 +153,8 @@ public class App {
             ApplicationResponse response = new ApplicationResponse();
 
             while (true) {
+                long startTime;
+                long endTime;
                 userInput = scanner.nextLine();
                 String[] temp1 = userInput.split("-args:");
                 String[] temp2 = temp1[0].split("-name:");
@@ -257,8 +170,6 @@ public class App {
                 String urls = null;
                 if (!command.equals("exec_local_"))
                     urls = config.getProperty(command);
-
-
                 if (command.isEmpty())
                     System.err.println("Unknow command. Try 'help' for the command list");
                 else if (command.equals("result")) {
@@ -267,39 +178,57 @@ public class App {
                         System.out.println("");
                     }
                     try {
+                        startTime = System.currentTimeMillis();
                         response = GetJsonObject.getAppResponseFromUrl("http://" + ip_key[0] + ":8300/result/" + ip_key[1]);
-                        PrettyPrinter.printResult(response);
+                        endTime = System.currentTimeMillis();
+                        PrettyPrinter.printResult(response, endTime-startTime, ip_key[0]);
                     } catch (Exception ex) {
                     }
                 } else if (command.equals("help") || command.equals("HELP"))
                     PrettyPrinter.printHelp();
+                else if (command.equals("nodes")) {
+                    try {
+                        PrettyPrinter.printNodesList(GetJsonObject.getNodes(config.getProperty("Middleware_node_ip") + ":" + config.getProperty("Middleware_application_port") + "/node"));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 else if (command.equals("exec_local_")) {
                     try {
+                        startTime = System.currentTimeMillis();
                         response = LocalExecution.exec(appName, arguments);
-                        PrettyPrinter.printResult(response);
+                        endTime = System.currentTimeMillis();
+                        PrettyPrinter.printResult(response, endTime-startTime, "localhost");
                     } catch (Exception ex) {
                         System.err.println("Unknow command, try 'help' for the command list");
                         System.out.print(ex.getMessage() + "\ncausa\n" + ex.getCause());
                     }
-                } else {
+                }
+                else if (config.getProperty(command) != null){
                     String[] procedures = urls.split(",");
                     try {
+                        startTime = System.currentTimeMillis();
                         selectedNode = GetJsonObject.getNodeFromUrl(config.getProperty("Middleware_node_ip") + ":" + config.getProperty("Middleware_application_port") + procedures[0]);
+                        long partialElapsedTime = System.currentTimeMillis() - startTime;
 
                         String completeUrl = "http://" + selectedNode.getIp() + ":" +
                                 config.getProperty("Node_listening_port") + procedures[1] + appName;
                         if (arguments != null)
                             completeUrl = completeUrl.concat("/" + arguments);
-
+                        startTime = System.currentTimeMillis();
                         response = GetJsonObject.getAppResponseFromUrl(completeUrl);
+                        endTime = System.currentTimeMillis();
                         if (response.getExecutionMethod() == TaskExecutionMethodEnumeration.POST_RESULT) {
                             results.put(response.getDownloadKey(), selectedNode.getIp());
                         }
-                        PrettyPrinter.printResult(response);
+                        PrettyPrinter.printResult(response, endTime-startTime+partialElapsedTime, selectedNode.getIp());
                     } catch (Exception ex) {
                         System.err.println(ex.getMessage());
                         System.err.println(ex.getCause());
                     }
+                }
+                else {
+                    System.err.println("Unknow command. Try 'help' for the command list");
                 }
             }
         }
