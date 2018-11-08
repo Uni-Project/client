@@ -1,6 +1,7 @@
 package com.sdcc.util;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
@@ -14,7 +15,9 @@ import java.io.IOException;
 public class FileDownloader {
 
     public static void downloadFromS3(String bucketName, String keyName) {
-        final AmazonS3 s3 = AmazonS3ClientBuilder.defaultClient();
+        final AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+                .withRegion(Regions.EU_CENTRAL_1)
+                .build();
         try {
             S3Object o = s3.getObject(bucketName, keyName);
             S3ObjectInputStream s3is = o.getObjectContent();
