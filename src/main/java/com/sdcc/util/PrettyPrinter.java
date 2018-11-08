@@ -1,5 +1,6 @@
 package com.sdcc.util;
 
+import com.sdcc.entity.Application;
 import com.sdcc.entity.ApplicationResponse;
 import com.sdcc.entity.Node;
 import java.util.HashMap;
@@ -32,7 +33,9 @@ public class PrettyPrinter {
                 "8) result\n"+
                 "   show the result stored in the fog nodes\n"+
                 "9) nodes"+
-                "   show all the available nodes\n\n"
+                "   show all the available nodes\n" +
+                "10) apps\n" +
+                "   show all the available applications\n\n"
         );
     }
 
@@ -100,6 +103,15 @@ public class PrettyPrinter {
         results.remove(res[1]);
 
         return res;
+    }
+
+    public static void printApplicationList(List<Application> apps) {
+        System.out.println("Available apps: " + apps.size());
+        for (int i = 0; i < apps.size(); i++) {
+            System.out.println(i + ") [" + apps.get(i).getAppName() + "]");
+            System.out.println("Status: " + String.valueOf(apps.get(i).getStatus()));
+            System.out.println("Description:\n" + apps.get(i).getDescription());
+        }
     }
 
 

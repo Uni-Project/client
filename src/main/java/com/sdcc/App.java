@@ -150,7 +150,7 @@ public class App {
 
             String userInput;
             Node selectedNode;
-            ApplicationResponse response = new ApplicationResponse();
+            ApplicationResponse response;
 
             while (true) {
                 long startTime;
@@ -183,12 +183,20 @@ public class App {
                         endTime = System.currentTimeMillis();
                         PrettyPrinter.printResult(response, endTime-startTime, ip_key[0]);
                     } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
                 } else if (command.equals("help") || command.equals("HELP"))
                     PrettyPrinter.printHelp();
                 else if (command.equals("nodes")) {
                     try {
                         PrettyPrinter.printNodesList(GetJsonObject.getNodes(config.getProperty("Middleware_node_ip") + ":" + config.getProperty("Middleware_application_port") + "/node"));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                else if (command.equals("apps")) {
+                    try {
+                        PrettyPrinter.printApplicationList(GetJsonObject.getApps(config.getProperty("Middleware_node_ip") + ":" + config.getProperty("Middleware_application_port") + "/application"));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -221,6 +229,7 @@ public class App {
                         if (response.getExecutionMethod() == TaskExecutionMethodEnumeration.POST_RESULT) {
                             results.put(response.getDownloadKey(), selectedNode.getIp());
                         }
+
                         PrettyPrinter.printResult(response, endTime-startTime+partialElapsedTime, selectedNode.getIp());
                     } catch (Exception ex) {
                         System.err.println(ex.getMessage());

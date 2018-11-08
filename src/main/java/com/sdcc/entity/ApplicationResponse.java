@@ -2,6 +2,7 @@ package com.sdcc.entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sdcc.enumeration.ApplicationStatusEnumeration;
 import com.sdcc.enumeration.TaskExecutionMethodEnumeration;
 
 
@@ -41,7 +42,6 @@ public class ApplicationResponse {
 
     public ApplicationResponse() {
         this.applicationOutput = "";
-
         this.applicationError = "";
     }
 

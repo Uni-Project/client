@@ -50,4 +50,17 @@ public class GetJsonObject {
         return nodes;
     }
 
+    public static List<Application> getApps(String url) throws IOException, JSONException {
+        //TODO migliorare...
+        JSONArray array = new JSONArray(IOUtils.toString(new URL(url), Charset.forName("UTF-8")));
+        ArrayList<Application> apps = new ArrayList<Application>();
+        if (array != null) {
+            for (int i = 0; i < array.length(); i++) {
+                apps.add(new Gson().fromJson(array.getJSONObject(i).toString(), Application.class));
+            }
+        }
+
+        return apps;
+    }
+
 }
